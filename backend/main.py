@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sklearn.ensemble import RandomForestClassifier
 from dotenv import load_dotenv
 from google import genai
@@ -11,7 +11,6 @@ load_dotenv()
 
 app = FastAPI()
 
-# Allow frontend later
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,11 +24,25 @@ class CodeRequest(BaseModel):
     code: str
     language: str
 
+    @field_validator("code")
+    @classmethod
+    def validate_code(cls, value):
+        if not value.strip():
+            raise ValueError("Code cannot be empty")
 
-# ---------------- ML MODEL TRAINING ----------------
+        if len(value) > 50000:
+            raise ValueError("Code is too large")
 
-# Features:
-# [non_empty_lines, loops, conditions, nested_loop, uses_sort, binary_search_pattern]
+        return value.strip()
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value):
+        if not value.strip():
+            raise ValueError("Language cannot be empty")
+
+        return value.strip().lower()
+
 
 X_train = np.array([
     [5, 0, 1, 0, 0, 0],
@@ -49,11 +62,6 @@ X_train = np.array([
     [70, 5, 8, 1, 1, 0],
 ])
 
-# Labels:
-# 0 = Low Risk
-# 1 = Medium Risk
-# 2 = High Risk
-
 y_train = np.array([
     0, 0, 1, 1, 1,
     2, 2, 2, 0, 1,
@@ -72,8 +80,6 @@ def label_to_risk(label):
     return "High"
 
 
-# ---------------- BASIC ROUTES ----------------
-
 @app.get("/")
 def home():
     return {
@@ -90,8 +96,6 @@ def health():
         "service": "CodeMentor AI"
     }
 
-
-# ---------------- FEATURE EXTRACTION ----------------
 
 def extract_code_features(code: str):
     lines = code.split("\n")
@@ -144,7 +148,6 @@ def extract_code_features(code: str):
     }
 
 
-# ---------------- TIME COMPLEXITY ----------------
 
 def detect_time_complexity(features):
     loops = features["loops"]
@@ -187,8 +190,6 @@ def detect_time_complexity(features):
         "reason": "No loop or sorting pattern found."
     }
 
-
-# ---------------- ML + RULE BASED RISK ----------------
 
 def predict_ml_risk(features):
     input_data = np.array([[
@@ -252,8 +253,6 @@ def predict_ml_risk(features):
     }
 
 
-# ---------------- FEEDBACK ----------------
-
 def generate_feedback(features, ml_risk):
     feedback = []
 
@@ -283,8 +282,6 @@ def generate_feedback(features, ml_risk):
 
     return feedback
 
-
-# ---------------- GEMINI LLM REVIEW ----------------
 
 def generate_llm_review(code, language, features, time_complexity, ml_risk):
     api_key = os.getenv("GEMINI_API_KEY")
@@ -341,9 +338,6 @@ Give response in this exact format:
             "message": "LLM review failed.",
             "error": str(e)
         }
-
-
-# ---------------- MAIN ANALYZE API ----------------
 
 @app.post("/api/analyze")
 def analyze_code(request: CodeRequest):
