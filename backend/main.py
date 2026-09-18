@@ -291,52 +291,82 @@ def generate_llm_review(code, language, features, time_complexity, ml_risk):
             "enabled": False,
             "message": "Gemini API key not found. Add GEMINI_API_KEY in .env file."
         }
-
     prompt = f"""
-You are CodeMentor AI, an expert software engineering code reviewer.
+You are CodeMentor AI, a helpful coding mentor.
 
-Analyze this {language} code.
+Review the following {language} code for a beginner programmer.
 
-Code:
+CODE:
 {code}
 
-Basic extracted features:
+STATIC ANALYSIS:
 {features}
 
-Detected time complexity:
+DETECTED TIME COMPLEXITY:
 {time_complexity}
 
-ML bug risk:
+ML BUG RISK:
 {ml_risk}
 
-Give response in this exact format:
+Provide a practical and honest code review.
 
-1. What this code does:
+Follow these sections:
+
+1. What the code does:
+Explain the logic in simple language.
+
 2. Possible bugs:
-3. Edge cases to test:
-4. Optimization suggestion:
-5. Cleaner code suggestion:
+Identify actual bugs or potential problems.
+Do not invent bugs.
+
+3. Edge cases:
+Mention test cases the programmer should try.
+
+4. Time and space complexity:
+Explain the complexity and whether the detected
+complexity may be inaccurate.
+
+5. Optimization suggestions:
+Suggest improvements only when useful.
+
 6. Interview explanation:
+Explain how the programmer can describe
+the code in a technical interview.
+
+Use simple language.
+Avoid unnecessary praise.
+If the code is too short to identify a problem,
+clearly say so.
 """
 
     try:
         client = genai.Client(api_key=api_key)
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",
             contents=prompt
         )
 
+        review = response.text
+
+        if not review or not review.strip():
+            return {
+                "enabled": False,
+                "message": "Gemini returned an empty review."
+            }
+
         return {
             "enabled": True,
-            "review": response.text
+            "review": review
         }
 
-    except Exception as e:
+
+    except Exception as error:
+        print("Gemini error:", error)
+        
         return {
             "enabled": False,
-            "message": "LLM review failed.",
-            "error": str(e)
+            "message": "LLM review failed. Please try again later."
         }
 
 @app.post("/api/analyze")
