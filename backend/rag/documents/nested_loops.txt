@@ -1,0 +1,18 @@
+Topic: Nested Loops
+
+A nested loop is a loop inside another loop.
+
+If both loops run n times:
+Time Complexity: O(n²)
+
+Example:
+for(int i = 0; i < n; i++) {
+    for(int j = 0; j < n; j++) {
+        cout << i + j;
+    }
+}
+
+Explanation:
+The outer loop runs n times.
+For every outer loop iteration, the inner loop runs n times.
+Total operations = n * n = n².

@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+import time
+from rag.search import search_knowledge
 from pydantic import BaseModel, field_validator
 from sklearn.ensemble import RandomForestClassifier
 from dotenv import load_dotenv
@@ -241,7 +243,7 @@ def predict_ml_risk(features):
     else:
         final_risk = "High"
 
-    # Safety rule
+    
     if features["nested_loop"] == 1 and final_risk == "Low":
         final_risk = "Medium"
 
@@ -291,8 +293,21 @@ def generate_llm_review(code, language, features, time_complexity, ml_risk):
             "enabled": False,
             "message": "Gemini API key not found. Add GEMINI_API_KEY in .env file."
         }
+    try:
+        relevant_knowledge = search_knowledge(code, top_k=3)
+
+        knowledge_context = "\n\n".join(
+            relevant_knowledge
+        )
+
+    except Exception as error:
+        print("RAG search error:", error)
+        knowledge_context = "No relevant knowledge found."        
     prompt = f"""
 You are CodeMentor AI, a helpful coding mentor.
+
+RELEVANT KNOWLEDGE FROM RAG:
+{knowledge_context}
 
 Review the following {language} code for a beginner programmer.
 
@@ -341,11 +356,24 @@ clearly say so.
 
     try:
         client = genai.Client(api_key=api_key)
-
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt
-        )
+        
+        response = None
+        
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.6-flash",
+                    contents=prompt
+                )
+                break
+            except Exception as error:
+                print(
+                    f"Gemini attempt {attempt + 1} failed:", error
+                )
+                
+                if attempt == 2:
+                    raise
+                time.sleep(3)
 
         review = response.text
 
@@ -363,7 +391,7 @@ clearly say so.
 
     except Exception as error:
         print("Gemini error:", error)
-        
+
         return {
             "enabled": False,
             "message": "LLM review failed. Please try again later."

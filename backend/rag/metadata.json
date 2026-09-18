@@ -1,0 +1,6 @@
+[
+  {
+    "source": "nested_loops.txt",
+    "content": "Topic: Nested Loops\n\nA nested loop is a loop inside another loop.\n\nIf both loops run n times:\nTime Complexity: O(n\u00b2)\n\nExample:\nfor(int i = 0; i < n; i++) {\n    for(int j = 0; j < n; j++) {\n        cout << i + j;\n    }\n}\n\nExplanation:\nThe outer loop runs n times.\nFor every outer loop iteration, the inner loop runs n times.\nTotal operations = n * n = n\u00b2."
+  }
+]
