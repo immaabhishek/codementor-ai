@@ -1,0 +1,57 @@
+[
+  {
+    "id": "dsa_001",
+    "category": "dsa",
+    "title": "Nested Loop Brute Force Search",
+    "pattern_description": "Comparing every pair of elements using nested iterations resulting in O(n²) quadratic runtime.",
+    "time_complexity": "O(n²)",
+    "space_complexity": "O(1)",
+    "common_triggers": ["nested loop", "for inside for", "double loop", "pair matching"],
+    "key_edge_cases": ["empty array", "single element array", "duplicate values", "sorted input array"],
+    "recommendation": "Check if a Hash Map (O(n) time, O(n) space) or Two-Pointer technique on a sorted array can reduce complexity from O(n²) to O(n) or O(n log n)."
+  },
+  {
+    "id": "dsa_002",
+    "category": "dsa",
+    "title": "Two Pointers Technique",
+    "pattern_description": "Using two pointers (left and right or fast and slow) to iterate through a sequence in linear time.",
+    "time_complexity": "O(n)",
+    "space_complexity": "O(1)",
+    "common_triggers": ["left right pointer", "two sum sorted", "palindrome check", "reverse array"],
+    "key_edge_cases": ["odd vs even length arrays", "pointers meeting at mid-point", "out-of-bounds pointer step"],
+    "recommendation": "Ensure pointer increments and decrements cannot cross each other infinitely or cause off-by-one errors."
+  },
+  {
+    "id": "dsa_003",
+    "category": "dsa",
+    "title": "Binary Search Pattern",
+    "pattern_description": "Repeatedly dividing a sorted search space in half to achieve logarithmic runtime search O(log n).",
+    "time_complexity": "O(log n)",
+    "space_complexity": "O(1)",
+    "common_triggers": ["binary search", "mid calculation", "low high pointers", "sorted search space"],
+    "key_edge_cases": ["low > high loop termination", "integer overflow in mid calculation (low + (high - low) / 2)", "duplicates in sorted array"],
+    "recommendation": "Use `mid = low + (high - low) / 2` to prevent potential integer overflow in languages like C++ and Java."
+  },
+  {
+    "id": "dsa_004",
+    "category": "dsa",
+    "title": "Sliding Window Pattern",
+    "pattern_description": "Maintaining a dynamic window over array/string contiguous subarrays to compute running aggregates.",
+    "time_complexity": "O(n)",
+    "space_complexity": "O(1) or O(k)",
+    "common_triggers": ["subsegment sum", "contiguous subarray", "longest substring without repeating characters"],
+    "key_edge_cases": ["window size larger than input length", "empty string or array", "negative numbers in array"],
+    "recommendation": "Shrink window left boundary while window constraints are violated before expanding right boundary."
+  },
+  {
+    "id": "dsa_005",
+    "category": "dsa",
+    "title": "Hash Map Lookups & Frequency Counting",
+    "pattern_description": "Using a hash table or dictionary for O(1) average time lookups, duplicate detection, and frequency count.",
+    "time_complexity": "O(n)",
+    "space_complexity": "O(n)",
+    "common_triggers": ["unordered_map", "dict", "frequency count", "has key check", "hash set"],
+    "key_edge_cases": ["hash collisions", "missing key access throwing exception", "large memory consumption"],
+    "recommendation": "Always verify key existence before accessing map values to prevent runtime KeyErrors or default insertions."
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "bug_001",
+    "category": "anti_pattern",
+    "title": "Off-by-One Loop Bounds",
+    "pattern_description": "Iterating up to `<= array.length` or setting incorrect array termination bounds leading to Out-Of-Bounds exceptions.",
+    "common_triggers": ["<= length", "<= size()", "index out of range", "off-by-one"],
+    "rule": "0-indexed arrays run from `0` to `length - 1`. Iterating to `<= length` reads outside valid memory allocated for the container.",
+    "recommendation": "Use strict inequality `< length` or range-based loops to eliminate boundary indexing errors."
+  },
+  {
+    "id": "bug_002",
+    "category": "anti_pattern",
+    "title": "Unbounded / Unchecked Mutation Inside Loops",
+    "pattern_description": "Modifying loop index counters manually inside `for` loops or altering collection structure while iterating.",
+    "common_triggers": ["i++ inside loop", "i += 2", "remove element while loop", "mutation"],
+    "rule": "Mutating loop index state in multiple places leads to skipped elements, infinite execution loops, or ConcurrentModificationExceptions.",
+    "recommendation": "Decouple iteration logic from state mutation or create a filtered copy of the array."
+  },
+  {
+    "id": "bug_003",
+    "category": "anti_pattern",
+    "title": "Missing Base Case in Recursion",
+    "pattern_description": "Recursive function calls without strict terminating condition resulting in Stack Overflow.",
+    "common_triggers": ["recursive call", "return function(", "stack overflow"],
+    "rule": "Every recursive call path must converge towards a base case that returns without making further self-invocations.",
+    "recommendation": "Validate base conditions (`n <= 0`, empty tree node, etc.) at the very top of recursive functions."
+  },
+  {
+    "id": "bug_004",
+    "category": "anti_pattern",
+    "title": "Unchecked Null / Pointer / Empty Access",
+    "pattern_description": "Dereferencing pointers or accessing index 0 of empty arrays without checking size first.",
+    "common_triggers": ["[0]", "head.next", "null pointer", "empty check"],
+    "rule": "Calling properties or elements on null/empty data structures causes runtime crashes (NullPointerException, Segmentation Fault).",
+    "recommendation": "Add explicit initial size or null check `if (vec.empty()) return 0;` at start of routine."
+  }
+]

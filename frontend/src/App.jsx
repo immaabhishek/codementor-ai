@@ -126,6 +126,21 @@ Feedback:
 ---------
 ${result.feedback.map((item, index) => `${index + 1}. ${item}`).join("\n")}
 
+Retrieved Knowledge Base Context (RAG):
+--------------------------------------
+${
+  result.rag_context && result.rag_context.length > 0
+    ? result.rag_context
+        .map(
+          (item, index) =>
+            `${index + 1}. [${item.title}] (Category: ${item.category}):\n   - Rule: ${
+              item.pattern_description || item.rule || ""
+            }\n   - Recommendation: ${item.recommendation}`
+        )
+        .join("\n\n")
+    : "No RAG context retrieved."
+}
+
 AI Code Review:
 ---------------
 ${
@@ -318,6 +333,33 @@ ${code}
                   ))}
                 </ul>
               </div>
+
+              {result.rag_context && result.rag_context.length > 0 && (
+                <div className="section rag-section">
+                  <div className="rag-header">
+                    <h3>Retrieved Reference Knowledge (RAG)</h3>
+                    <span className="rag-badge">Vector DB Grounded</span>
+                  </div>
+                  <div className="rag-cards">
+                    {result.rag_context.map((item, index) => (
+                      <div className="rag-card" key={index}>
+                        <div className="rag-card-top">
+                          <span className="rag-card-title">{item.title}</span>
+                          <span className="rag-card-category">{item.category}</span>
+                        </div>
+                        <p className="rag-card-desc">
+                          {item.pattern_description || item.rule}
+                        </p>
+                        {item.recommendation && (
+                          <div className="rag-card-rec">
+                            <strong>Recommendation:</strong> {item.recommendation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="section ai-review">
                 <h3>AI Code Review</h3>

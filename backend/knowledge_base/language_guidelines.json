@@ -1,0 +1,52 @@
+[
+  {
+    "id": "lang_cpp_001",
+    "category": "language",
+    "language": "cpp",
+    "title": "C++ Vector Pass-by-Reference & Range Loops",
+    "pattern_description": "Best practice rules for passing C++ std::vector objects and modern range iteration.",
+    "common_triggers": ["vector", "vector<int>", "cpp pass by value"],
+    "rule": "Pass vectors by const reference `const std::vector<int>&` to prevent expensive linear deep copy allocations.",
+    "recommendation": "Use `const auto&` in range-based loops `for(const auto& item : vec)` when reading elements without mutating."
+  },
+  {
+    "id": "lang_cpp_002",
+    "category": "language",
+    "language": "cpp",
+    "title": "C++ Signed Integer Overflow Safety",
+    "pattern_description": "Preventing undefined behavior when performing arithmetic on 32-bit signed integers.",
+    "common_triggers": ["int max", "int overflow", "arithmetic loop", "prices[j] - prices[i]"],
+    "rule": "Signed integer overflow in C++ causes Undefined Behavior (UB). Use `long long` for large accumulations.",
+    "recommendation": "Check bound limits before adding or multiplying large integer variables."
+  },
+  {
+    "id": "lang_py_001",
+    "category": "language",
+    "language": "python",
+    "title": "Pythonic Iteration & List Comprehensions",
+    "pattern_description": "Leveraging Python built-in iterators, enumerate, and generators for cleaner execution.",
+    "common_triggers": ["range(len())", "for i in range", "python loop"],
+    "rule": "Avoid `for i in range(len(lst))` when element values are needed directly. Use `for item in lst:` or `for i, item in enumerate(lst):`.",
+    "recommendation": "Replace simple element transformation loops with list comprehensions or generator expressions for speed and readability."
+  },
+  {
+    "id": "lang_js_001",
+    "category": "language",
+    "language": "javascript",
+    "title": "JavaScript Strict Equality & Const/Let Variable Scope",
+    "pattern_description": "Avoiding coercion bugs and implicit globals in JS scripts.",
+    "common_triggers": ["==", "var ", "javascript loop", "array sort"],
+    "rule": "Use strict equality `===` instead of `==` to avoid automatic type coercion bugs.",
+    "recommendation": "Provide a explicit compare function `(a, b) => a - b` to `Array.prototype.sort()` to prevent lexicographical sorting on numbers."
+  },
+  {
+    "id": "lang_java_001",
+    "category": "language",
+    "language": "java",
+    "title": "Java Object Equality & Collection Bounds",
+    "pattern_description": "Proper usage of `.equals()` vs `==` and array indexing safety in Java.",
+    "common_triggers": ["java array", "== string", "java loop", "list size"],
+    "rule": "Compare Objects and Strings using `.equals()` rather than `==` which compares memory references.",
+    "recommendation": "Prefer `ArrayList` or `List` interfaces over raw arrays when dynamic resizing or utility methods are needed."
+  }
+]

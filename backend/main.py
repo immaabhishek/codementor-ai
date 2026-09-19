@@ -6,10 +6,19 @@ from google import genai
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import os
+import time
+from rag_store import rag_engine
 
 load_dotenv()
 
 app = FastAPI()
+
+@app.on_event("startup")
+def startup_event():
+    try:
+        rag_engine.build_or_load_index()
+    except Exception as e:
+        print("Startup RAG index build error:", e)
 
 app.add_middleware(
     CORSMiddleware,
@@ -283,7 +292,7 @@ def generate_feedback(features, ml_risk):
     return feedback
 
 
-def generate_llm_review(code, language, features, time_complexity, ml_risk):
+def generate_llm_review(code, language, features, time_complexity, ml_risk, rag_context=None):
     api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
@@ -291,10 +300,20 @@ def generate_llm_review(code, language, features, time_complexity, ml_risk):
             "enabled": False,
             "message": "Gemini API key not found. Add GEMINI_API_KEY in .env file."
         }
-            
+
+    rag_str = ""
+    if rag_context and len(rag_context) > 0:
+        rag_str = "RETRIEVED KNOWLEDGE BASE CONTEXT (RAG Grounding):\n"
+        for idx, item in enumerate(rag_context, 1):
+            title = item.get("title", "Reference Rule")
+            desc = item.get("pattern_description") or item.get("rule") or ""
+            rec = item.get("recommendation", "")
+            rag_str += f"{idx}. [{title}]: {desc} Recommendation: {rec}\n"
+    else:
+        rag_str = "RETRIEVED KNOWLEDGE BASE CONTEXT (RAG Grounding):\nNone retrieved."
+
     prompt = f"""
 You are CodeMentor AI, a helpful coding mentor.
-
 
 Review the following {language} code for a beginner programmer.
 
@@ -310,7 +329,9 @@ DETECTED TIME COMPLEXITY:
 ML BUG RISK:
 {ml_risk}
 
-Provide a practical and honest code review.
+{rag_str}
+
+Provide a practical and honest code review. Ground your findings using the RETRIEVED KNOWLEDGE BASE CONTEXT above when relevant.
 
 Follow these sections:
 
@@ -329,7 +350,7 @@ Explain the complexity and whether the detected
 complexity may be inaccurate.
 
 5. Optimization suggestions:
-Suggest improvements only when useful.
+Suggest improvements only when useful (refer to RAG guidelines if applicable).
 
 6. Interview explanation:
 Explain how the programmer can describe
@@ -341,47 +362,41 @@ If the code is too short to identify a problem,
 clearly say so.
 """
 
+    models_to_try = ["gemini-3.6-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
+    last_error = None
+
     try:
         client = genai.Client(api_key=api_key)
-        
-        response = None
-        
-        for attempt in range(3):
-            try:
-                response = client.models.generate_content(
-                    model="gemini-3.6-flash",
-                    contents=prompt
-                )
-                break
-            except Exception as error:
-                print(
-                    f"Gemini attempt {attempt + 1} failed:", error
-                )
-                
-                if attempt == 2:
-                    raise
-                time.sleep(3)
 
-        review = response.text
-
-        if not review or not review.strip():
-            return {
-                "enabled": False,
-                "message": "Gemini returned an empty review."
-            }
-
-        return {
-            "enabled": True,
-            "review": review
-        }
-
-
-    except Exception as error:
-        print("Gemini error:", error)
+        for model_name in models_to_try:
+            for attempt in range(2):
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=prompt
+                    )
+                    review = response.text
+                    if review and review.strip():
+                        return {
+                            "enabled": True,
+                            "review": review,
+                            "model_used": model_name
+                        }
+                except Exception as error:
+                    last_error = error
+                    print(f"Gemini model {model_name} attempt {attempt + 1} failed: {error}")
+                    time.sleep(1.5)
 
         return {
             "enabled": False,
-            "message": "LLM review failed. Please try again later."
+            "message": f"LLM review temporarily unavailable: {last_error or 'Rate limit or temporary network issue.'}"
+        }
+
+    except Exception as error:
+        print("Gemini client initialization or execution error:", error)
+        return {
+            "enabled": False,
+            "message": f"LLM review failed: {str(error)}"
         }
 
 @app.post("/api/analyze")
@@ -391,12 +406,15 @@ def analyze_code(request: CodeRequest):
     ml_risk = predict_ml_risk(features)
     feedback = generate_feedback(features, ml_risk)
 
+    rag_context = rag_engine.query_rag(request.code, request.language, top_k=3)
+
     llm_review = generate_llm_review(
         request.code,
         request.language,
         features,
         time_complexity,
-        ml_risk
+        ml_risk,
+        rag_context
     )
 
     return {
@@ -407,6 +425,7 @@ def analyze_code(request: CodeRequest):
             "time_complexity": time_complexity,
             "ml_bug_risk": ml_risk,
             "feedback": feedback,
+            "rag_context": rag_context,
             "llm_review": llm_review
         }
-    }
+    }
