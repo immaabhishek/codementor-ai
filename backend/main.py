@@ -1,6 +1,4 @@
 from fastapi import FastAPI
-import time
-from rag.search import search_knowledge
 from pydantic import BaseModel, field_validator
 from sklearn.ensemble import RandomForestClassifier
 from dotenv import load_dotenv
@@ -293,21 +291,10 @@ def generate_llm_review(code, language, features, time_complexity, ml_risk):
             "enabled": False,
             "message": "Gemini API key not found. Add GEMINI_API_KEY in .env file."
         }
-    try:
-        relevant_knowledge = search_knowledge(code, top_k=3)
-
-        knowledge_context = "\n\n".join(
-            relevant_knowledge
-        )
-
-    except Exception as error:
-        print("RAG search error:", error)
-        knowledge_context = "No relevant knowledge found."        
+            
     prompt = f"""
 You are CodeMentor AI, a helpful coding mentor.
 
-RELEVANT KNOWLEDGE FROM RAG:
-{knowledge_context}
 
 Review the following {language} code for a beginner programmer.
 
